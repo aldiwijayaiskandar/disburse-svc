@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  api:
+    container_name: paper_assessment
+    build:
+      context: ./
+      dockerfile: docker/api/Dockerfile
+    environment:
+      - PORT=5000
+    volumes:
+      - ./:/app
+    networks:
+      - microservice_network
+networks:
+  microservice_network:
+    driver: bridge
