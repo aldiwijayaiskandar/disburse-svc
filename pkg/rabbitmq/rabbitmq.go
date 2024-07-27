@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"fmt"
 
-	"github.com/paper-assessment/config"
+	"github.com/paper-assessment/pkg/config"
 	"github.com/streadway/amqp"
 )
 
