@@ -13,30 +13,6 @@ services:
     networks:
       - microservice_network
 
-  balance_service:
-    build:
-      context: ./
-      dockerfile: docker/balance/Dockerfile
-    volumes:
-      - ./:/app
-    networks:
-      - microservice_network
-    depends_on:
-      - balance-db
-
-  balance-db:
-    image: postgres:latest
-    restart: always
-    shm_size: 128mb
-    volumes:
-      - ./docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=balance
-    ports:
-      - 5432:5432
-
   disburse_service:
     build:
       context: ./
@@ -67,6 +43,30 @@ services:
       - POSTGRES_DB=trasnsaction
     ports:
       - 5433:5432
+
+  wallet_service:
+    build:
+      context: ./
+      dockerfile: docker/wallet/Dockerfile
+    volumes:
+      - ./:/app
+    networks:
+      - microservice_network
+    depends_on:
+      - wallet-db
+
+  wallet-db:
+    image: postgres:latest
+    restart: always
+    shm_size: 128mb
+    volumes:
+      - ./docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=wallet
+    ports:
+      - 5432:5432
 
 networks:
   microservice_network:
