@@ -1,8 +1,8 @@
 package apigateway
 
 import (
+	"context"
 	"encoding/json"
-	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -49,7 +49,9 @@ func (client *Client) Disburse(ctx *gin.Context) {
 	)
 
 	// waiting for reply
-	msgs, err := channel.Consume(
+	c, cancel := context.WithCancel(context. Background())
+	msgs, err := channel.ConsumeWithContext(
+		c,
 		"disburse.initiate.reply.queue",
 		"",
 		true, 
@@ -68,11 +70,10 @@ func (client *Client) Disburse(ctx *gin.Context) {
 			var response models.ApiResponse
 			json.Unmarshal(d.Body, &response)
 
-			ctx.JSON(int(response.Status), response.Data)
-			channel.Close()
+			ctx.JSON(int(response.Status), response)
 			break
 		}
 	}
 
-	log.Println("DONE")
+	cancel()
 }
