@@ -8,6 +8,7 @@ type Config struct {
 	Port string
 	BrokerUrl string
 	UserDatabaseUrl string
+	WalletDatabaseUrl string
 }
 
 func LoadConfig() (c Config, err error) {
