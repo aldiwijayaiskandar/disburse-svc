@@ -117,7 +117,7 @@ func checkUser (correlationId string, channel *amqp091.Channel, request models.G
 			json.Unmarshal(userReplyMsgs.Body, &response)
 			
 			if response.Error != nil {
-				ReplyDisburseInitiate(
+				replyDisburseInitiate(
 					channel,
 					correlationId,
 					&models.ApiResponse{
@@ -132,7 +132,7 @@ func checkUser (correlationId string, channel *amqp091.Channel, request models.G
 			if response.User == nil { 
 				err := "User Doesn't Exist"
 
-				ReplyDisburseInitiate(
+				replyDisburseInitiate(
 					channel,
 					correlationId,
 					&models.ApiResponse{
@@ -195,9 +195,18 @@ func checkBalance(correlationId string, channel *amqp091.Channel, request models
 			if(*response.Balance < disburseRequest.Amount) {
 				err := "Inssuficient Balance" 
 
-				ReplyDisburseInitiate(channel, correlationId, &models.ApiResponse{
+				replyDisburseInitiate(channel, correlationId, &models.ApiResponse{
 					Status: 400,
 					Error: &err,
+				})
+			} else {
+				go deductBalance(correlationId, channel, models.DeductUserBalanceRequest{
+					UserId: disburseRequest.UserId,
+					Amount: disburseRequest.Amount,
+				})
+				
+				replyDisburseInitiate(channel, correlationId, &models.ApiResponse{
+					Status: 201,
 				})
 			}
 
@@ -208,7 +217,27 @@ func checkBalance(correlationId string, channel *amqp091.Channel, request models
 	cancel()
 }
 
-func ReplyDisburseInitiate(channel *amqp091.Channel, correlationId string, response *models.ApiResponse,){
+func deductBalance(correlationId string, channel *amqp091.Channel, request models.DeductUserBalanceRequest){
+	requestBytes, _ := json.Marshal(request)
+	// checking user exist
+	err := channel.Publish(
+		"wallet.exchange", // exchange
+		"wallet.get.balance", // routing key
+		false,           // mandatory
+		false,           // immediate
+		amqp091.Publishing{
+			ContentType:   "application/json",
+			CorrelationId: correlationId,
+			Body:          requestBytes,
+		},
+	)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func replyDisburseInitiate(channel *amqp091.Channel, correlationId string, response *models.ApiResponse,){
 	responseBytes, _ := json.Marshal(response)
 	err := channel.Publish(
 		"disburse.exchange", // exchange

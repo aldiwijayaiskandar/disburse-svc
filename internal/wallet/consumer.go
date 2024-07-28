@@ -1,8 +1,6 @@
 package wallet
 
 import (
-	// "github.com/paper-assessment/internal/user/repository"
-	// "github.com/paper-assessment/internal/user/usecase"
 	"github.com/paper-assessment/internal/wallet/delivery/rabbitmq"
 	"github.com/paper-assessment/internal/wallet/repository"
 	"github.com/paper-assessment/internal/wallet/usecase"
@@ -28,4 +26,5 @@ func Consume(connection *amqp091.Connection, repo *repository.WalletRepository){
 	)
 
 	rabbitmq.RegisterGetUserBalanceQueue(channel, usecase)
+	rabbitmq.RegisterDeductUserBalanceQueue(channel, usecase)
 }

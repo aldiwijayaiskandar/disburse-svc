@@ -23,6 +23,8 @@ func (u *WalletRepository) GetUserWallet(userId string) (*models.Wallet, error) 
     return wallet, nil
 }
 
-func (u *WalletRepository) DeductUserBalance(userId string, amount float64) {
-    
+func (u *WalletRepository) UpdateUserBalance(userId string, balance float64) {
+    var wallet models.Wallet
+    wallet.UserId = userId
+    u.db.First(&wallet).Update("balance", balance)
 }
