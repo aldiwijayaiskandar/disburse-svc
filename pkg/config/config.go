@@ -6,19 +6,7 @@ import (
 
 type Config struct {
 	Port string
-	RabbitMQ RabbitMQ
-}
-
-type RabbitMQ struct {
-	Host           string
-	Port           string
-	User           string
-	Password       string
-	Exchange       string
-	Queue          string
-	RoutingKey     string
-	ConsumerTag    string
-	WorkerPoolSize int
+	BrokerUrl string
 }
 
 func LoadConfig() (c Config, err error) {
