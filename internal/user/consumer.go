@@ -6,11 +6,12 @@ import (
 	"log"
 
 	"github.com/paper-assessment/internal/models"
+	"github.com/paper-assessment/internal/user/repository"
 	"github.com/paper-assessment/internal/user/usecase"
 	"github.com/rabbitmq/amqp091-go"
 )
 
-func Consume(connection *amqp091.Connection){
+func Consume(connection *amqp091.Connection, repo *repository.UserRepository){
 	channel, err := connection.Channel()
 	if err != nil {
 		panic(err)
@@ -36,6 +37,7 @@ func Consume(connection *amqp091.Connection){
 
 	usecase := usecase.NewUserUseCase(
 		channel,
+		repo,
 	)
 
 	RegisterGetUserQueue(exchange, channel, usecase)

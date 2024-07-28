@@ -7,6 +7,7 @@ import (
 type Config struct {
 	Port string
 	BrokerUrl string
+	UserDatabaseUrl string
 }
 
 func LoadConfig() (c Config, err error) {
