@@ -8,14 +8,16 @@ func (u *UserUserCase) GetUser(req models.GetUserRequest) models.GetUserResponse
 	user, err := u.repo.GetById(req.Id)
 
 	if err != nil {
-		panic(err)
+		resErr := err.Error()
+		return models.GetUserResponse{
+			Error: &resErr,
+		}
 	}
 
 	return models.GetUserResponse{
-		Data: &models.User{
+		User: &models.User{
 			Id: user.Id,
 			Name: user.Name,
 		},
-		Error: nil,
 	}
 }
