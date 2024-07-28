@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/paper-assessment/internal/user"
+	"github.com/paper-assessment/internal/user/database"
 	"github.com/paper-assessment/internal/user/repository"
 	"github.com/paper-assessment/pkg/config"
-	"github.com/paper-assessment/pkg/database"
 	"github.com/paper-assessment/pkg/rabbitmq"
 )
 
