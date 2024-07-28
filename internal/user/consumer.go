@@ -23,13 +23,26 @@ func Consume(connection *amqp091.Connection){
 		panic(err)
 	}
 
-	usecase := usecase.NewUserUseCase()
+	getUserReplyQueue, err := channel.QueueDeclare("user.get.reply.queue", true, false, false, false, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	err = channel.QueueBind(getUserReplyQueue.Name ,"user.get.reply",exchange, false, nil)
+
+	if  err != nil {
+		panic(err)
+	}
+
+	usecase := usecase.NewUserUseCase(
+		channel,
+	)
 
 	RegisterGetUserQueue(exchange, channel, usecase)
 }
 
 func RegisterGetUserQueue(exchange string, channel *amqp091.Channel, usecase *usecase.UserUserCase){
-	getQueue, err := channel.QueueDeclare("user.get.queue", true, false, true, false, nil)
+	getQueue, err := channel.QueueDeclare("user.get.queue", true, false, false, false, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -40,33 +53,38 @@ func RegisterGetUserQueue(exchange string, channel *amqp091.Channel, usecase *us
 	}
 
 	ctx := context.Background()
-	disburseConsumer, err := channel.ConsumeWithContext(ctx,getQueue.Name, "user-consumer", true, false, false, false, nil)
+	msgs, err := channel.ConsumeWithContext(ctx,getQueue.Name, "user-consumer", true, false, false, false, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	for messages := range disburseConsumer {
-		log.Println(string(messages.Body))
+	for d := range msgs {
+		log.Println("correlation id: ",d.CorrelationId)
 
-		res :=  usecase.GetUser(models.GetUserRequest{
-			Id: "test",
+		var request models.GetUserRequest
+		json.Unmarshal(d.Body, &request)
+
+		res := usecase.GetUser(models.GetUserRequest{
+			Id: request.Id,
 		})
-	
+
+		log.Println("correlation id: ",d.CorrelationId)
+
 		responseBytes, _ := json.Marshal(res)
-		err = channel.Publish(
-			"",
-			messages.ReplyTo,
+
+		log.Println("reply to: ", d.ReplyTo)
+		log.Println("exchange to: ", d.Exchange)
+
+		channel.Publish(
+			exchange,
+			d.ReplyTo,
 			false,
 			false,
 			amqp091.Publishing{
 				ContentType:   "application/json",
-				CorrelationId: messages.CorrelationId,
+				CorrelationId: d.CorrelationId,
 				Body:          responseBytes,
 			},
 		)
-
-		if err != nil {
-			log.Printf("Failed to publish a message: %v", err)
-		}
 	}
 }
