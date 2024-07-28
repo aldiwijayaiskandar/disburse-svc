@@ -12,4 +12,4 @@ RUN go get github.com/githubnemo/CompileDaemon
 
 EXPOSE 5000
 
-ENTRYPOINT CompileDaemon --build="go build cmd/transaction/main.go" --command=./main
+ENTRYPOINT CompileDaemon --build="go build cmd/docker/main.go" --command=./main

@@ -5,13 +5,14 @@ main:
 	go run ./cmd/api_gateway/main.go
 	go run ./cmd/balance/main.go
 	go run ./cmd/disburse/main.go
-	go run ./cmd/transaction/main.go
+	go run ./cmd/wallet/main.go
 
 build:
 	go build ./cmd/api_gateway/main.go
 	go build ./cmd/balance/main.go
 	go build ./cmd/disburse/main.go
-	go build ./cmd/transaction/main.go
+	go build ./cmd/user/main.go
+	go build ./cmd/wallet/main.go
 
 test:
 	go test -cover ./...

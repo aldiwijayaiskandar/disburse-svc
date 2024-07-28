@@ -22,27 +22,16 @@ services:
     networks:
       - microservice_network
 
-  transaction_service:
+  user_service:
     build:
       context: ./
-      dockerfile: docker/transaction/Dockerfile
+      dockerfile: docker/user/Dockerfile
     volumes:
       - ./:/app
     networks:
       - microservice_network
-
-  trasnsaction-db:
-    image: postgres:latest
-    restart: always
-    shm_size: 128mb
-    volumes:
-      - ./docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=trasnsaction
-    ports:
-      - 5433:5432
+    depends_on:
+      - user-db
 
   user-db:
     image: postgres:latest

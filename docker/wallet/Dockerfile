@@ -12,4 +12,4 @@ RUN go get github.com/githubnemo/CompileDaemon
 
 EXPOSE 5000
 
-ENTRYPOINT CompileDaemon --build="go build cmd/balance/main.go" --command=./main
+ENTRYPOINT CompileDaemon --build="go build cmd/wallet/main.go" --command=./main
