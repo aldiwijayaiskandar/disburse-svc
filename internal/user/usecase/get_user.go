@@ -5,7 +5,11 @@ import (
 )
 
 func (u *UserUserCase) GetUser(req models.GetUserRequest) models.GetUserResponse {
-	user := u.repo.GetById(req.Id)
+	user, err := u.repo.GetById(req.Id)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return models.GetUserResponse{
 		Data: &models.User{

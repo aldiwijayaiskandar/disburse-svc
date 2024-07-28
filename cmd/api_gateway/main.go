@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 	apigateway "github.com/paper-assessment/internal/api_gateway"
 	"github.com/paper-assessment/pkg/config"
@@ -13,7 +11,7 @@ func main(){
 	cfg, err := config.LoadConfig()
 
 	if err != nil {
-		log.Fatalln("Failed at config", err)
+		panic(err)
 	}
 
 	connection, err := rabbitmq.NewRabbitMQConn(&cfg)

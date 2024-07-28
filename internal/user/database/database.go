@@ -7,8 +7,8 @@ import (
 )
 
 
-func NewDatabaseConn(dsn string) *gorm.DB {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+func NewDatabaseConn(url string) *gorm.DB {
+	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
 	if err != nil {
 		panic("can't connect to database")
 	}

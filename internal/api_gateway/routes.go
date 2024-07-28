@@ -43,7 +43,6 @@ func (client *Client) Disburse(ctx *gin.Context) {
 		amqp091.Publishing{
 			ContentType:   "application/json",
 			CorrelationId: correlationId,
-			ReplyTo:       "user.get.reply.queue",
 			Body:          responseBytes,
 		},
 	)

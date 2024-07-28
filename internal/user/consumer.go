@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"encoding/json"
-	"log"
 
 	"github.com/paper-assessment/internal/models"
 	"github.com/paper-assessment/internal/user/repository"
@@ -21,17 +20,6 @@ func Consume(connection *amqp091.Connection, repo *repository.UserRepository){
 
 	err = channel.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
 	if err != nil {
-		panic(err)
-	}
-
-	getUserReplyQueue, err := channel.QueueDeclare("user.get.reply.queue", true, false, false, false, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	err = channel.QueueBind(getUserReplyQueue.Name ,"user.get.reply",exchange, false, nil)
-
-	if  err != nil {
 		panic(err)
 	}
 
@@ -54,15 +42,24 @@ func RegisterGetUserQueue(exchange string, channel *amqp091.Channel, usecase *us
 		panic(err)
 	}
 
+	getUserReplyQueue, err := channel.QueueDeclare("user.get.reply.queue", true, false, false, false, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	err = channel.QueueBind(getUserReplyQueue.Name ,"user.get.reply",exchange, false, nil)
+
+	if  err != nil {
+		panic(err)
+	}
+
 	ctx := context.Background()
-	msgs, err := channel.ConsumeWithContext(ctx,getQueue.Name, "user-consumer", true, false, false, false, nil)
+	msgs, err := channel.ConsumeWithContext(ctx, getQueue.Name, "", true, false, false, false, nil)
 	if err != nil {
 		panic(err)
 	}
 
 	for d := range msgs {
-		log.Println("correlation id: ",d.CorrelationId)
-
 		var request models.GetUserRequest
 		json.Unmarshal(d.Body, &request)
 
@@ -70,13 +67,11 @@ func RegisterGetUserQueue(exchange string, channel *amqp091.Channel, usecase *us
 			Id: request.Id,
 		})
 
-		log.Println("response: ", res)
-
 		responseBytes, _ := json.Marshal(res)
 
 		channel.Publish(
-			exchange,
-			d.ReplyTo,
+			"user.exchange",
+			"user.get.reply",
 			false,
 			false,
 			amqp091.Publishing{

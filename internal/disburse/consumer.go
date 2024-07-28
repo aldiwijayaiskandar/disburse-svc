@@ -57,7 +57,8 @@ func RegisterDisburseInitiateQueue(exchange string, channel *amqp091.Channel){
 		var request models.DisburseRequest
 		json.Unmarshal(msgs.Body, &request)
 
-		checkUser(msgs.CorrelationId, channel, &models.GetUserRequest{
+		
+		checkUser(msgs.CorrelationId, channel, models.GetUserRequest{
 			Id: request.UserId,
 		})
 
@@ -66,20 +67,19 @@ func RegisterDisburseInitiateQueue(exchange string, channel *amqp091.Channel){
 	}
 }
 
-func checkUser (correlationId string, channel *amqp091.Channel, request *models.GetUserRequest) {
-	userRequestBytes, _ := json.Marshal(request)
+func checkUser (correlationId string, channel *amqp091.Channel, request models.GetUserRequest) {
+	requestBytes, _ := json.Marshal(request)
 
 	// checking user exist
 	err := channel.Publish(
 		"user.exchange", // exchange
-		"user.get.reply", // routing key
+		"user.get", // routing key
 		false,           // mandatory
 		false,           // immediate
 		amqp091.Publishing{
 			ContentType:   "application/json",
 			CorrelationId: correlationId,
-			ReplyTo:       "user.get.reply.queue",
-			Body:          userRequestBytes,
+			Body:          requestBytes,
 		},
 	)
 
@@ -89,7 +89,15 @@ func checkUser (correlationId string, channel *amqp091.Channel, request *models.
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	getUserReplyMsgs, err := channel.ConsumeWithContext(ctx, "user.get.reply.queue" , "", true, false, false, false, nil)
+	getUserReplyMsgs, err := channel.ConsumeWithContext(
+		ctx, 
+		"user.get.reply.queue",
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,)
 	if err != nil {
 		panic(err)
 	}
