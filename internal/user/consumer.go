@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/paper-assessment/internal/models"
@@ -47,10 +48,25 @@ func RegisterGetUserQueue(exchange string, channel *amqp091.Channel, usecase *us
 	for messages := range disburseConsumer {
 		log.Println(string(messages.Body))
 
-		user :=  usecase.GetUser(models.GetUserRequest{
+		res :=  usecase.GetUser(models.GetUserRequest{
 			Id: "test",
 		})
-		
-		log.Println(user)
+	
+		responseBytes, _ := json.Marshal(res)
+		err = channel.Publish(
+			"",
+			messages.ReplyTo,
+			false,
+			false,
+			amqp091.Publishing{
+				ContentType:   "application/json",
+				CorrelationId: messages.CorrelationId,
+				Body:          responseBytes,
+			},
+		)
+
+		if err != nil {
+			log.Printf("Failed to publish a message: %v", err)
+		}
 	}
 }
