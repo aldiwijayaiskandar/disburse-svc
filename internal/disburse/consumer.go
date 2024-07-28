@@ -3,6 +3,8 @@ package disburse
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"log"
 
 	"github.com/paper-assessment/internal/models"
 	"github.com/rabbitmq/amqp091-go"
@@ -58,16 +60,23 @@ func RegisterDisburseInitiateQueue(exchange string, channel *amqp091.Channel){
 		json.Unmarshal(msgs.Body, &request)
 
 		
-		checkUser(msgs.CorrelationId, channel, models.GetUserRequest{
+		err := checkUser(msgs.CorrelationId, channel, models.GetUserRequest{
 			Id: request.UserId,
 		})
 
+		if err != nil {
+			log.Println("there is error when checking user")
+			break
+		}
+
 		// get balance
-		
+		checkBalance(msgs.CorrelationId, channel, models.GetUserBalanceRequest{
+			UserId: request.UserId,
+		}, request)
 	}
 }
 
-func checkUser (correlationId string, channel *amqp091.Channel, request models.GetUserRequest) {
+func checkUser (correlationId string, channel *amqp091.Channel, request models.GetUserRequest) (error) {
 	requestBytes, _ := json.Marshal(request)
 
 	// checking user exist
@@ -116,9 +125,11 @@ func checkUser (correlationId string, channel *amqp091.Channel, request models.G
 						Error: response.Error,
 					},
 				)
+
+				return errors.New(*response.Error)
 			}
 
-			if response.Data == nil { 
+			if response.User == nil { 
 				err := "User Doesn't Exist"
 
 				ReplyDisburseInitiate(
@@ -129,8 +140,67 @@ func checkUser (correlationId string, channel *amqp091.Channel, request models.G
 						Error: &err,
 					},
 				)
+
+				return errors.New(err)
 			}
 			
+			break;
+		}
+	}
+
+	cancel()
+	return nil
+}
+
+func checkBalance(correlationId string, channel *amqp091.Channel, request models.GetUserBalanceRequest, disburseRequest models.DisburseRequest) {
+	requestBytes, _ := json.Marshal(request)
+
+	// checking user exist
+	err := channel.Publish(
+		"wallet.exchange", // exchange
+		"wallet.get.balance", // routing key
+		false,           // mandatory
+		false,           // immediate
+		amqp091.Publishing{
+			ContentType:   "application/json",
+			CorrelationId: correlationId,
+			Body:          requestBytes,
+		},
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	getBalanceReplyMsgs, err := channel.ConsumeWithContext(
+		ctx, 
+		"wallet.get.balance.reply.queue",
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,)
+	if err != nil {
+		panic(err)
+	}
+
+	for msgs:= range getBalanceReplyMsgs {
+		if(correlationId == msgs.CorrelationId){
+			var response models.GetUserBalanceResponse
+			json.Unmarshal(msgs.Body, &response)
+			
+			if(*response.Balance < disburseRequest.Amount) {
+				err := "Inssuficient Balance" 
+
+				ReplyDisburseInitiate(channel, correlationId, &models.ApiResponse{
+					Status: 400,
+					Error: &err,
+				})
+			}
+
 			break;
 		}
 	}

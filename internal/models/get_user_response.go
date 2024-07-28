@@ -1,6 +1,6 @@
 package models
 
 type GetUserResponse struct {
-	Data *User `json:"data"`
+	User *User `json:"user"`
 	Error *string `json:"error"`
 }

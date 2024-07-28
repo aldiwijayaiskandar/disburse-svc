@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/paper-assessment/internal/user"
-	"github.com/paper-assessment/internal/user/database"
-	"github.com/paper-assessment/internal/user/repository"
+	"github.com/paper-assessment/internal/wallet"
+	"github.com/paper-assessment/internal/wallet/database"
+	"github.com/paper-assessment/internal/wallet/repository"
 	"github.com/paper-assessment/pkg/config"
 	"github.com/paper-assessment/pkg/rabbitmq"
 )
@@ -23,7 +23,7 @@ func main(){
 
 	db := database.NewDatabaseConn(cfg.WalletDatabaseUrl)
 
-	repository := repository.NewUserRepository(db)
+	repository := repository.NewWalletRepository(db)
 
-	user.Consume(connection, repository)
+	wallet.Consume(connection, repository)
 }

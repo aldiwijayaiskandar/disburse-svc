@@ -5,14 +5,15 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
-type UserUserCase struct {
+type WalletUseCase struct {
 	channel *amqp091.Channel
 	repo *repository.WalletRepository
 }
 
-func NewUserUseCase(channel *amqp091.Channel, repo *repository.WalletRepository) *UserUserCase {
-	return &UserUserCase{
+func NewWalletUseCase(channel *amqp091.Channel, repo *repository.WalletRepository) *WalletUseCase {
+	return &WalletUseCase{
 		channel: channel,
 		repo: repo,
 	}
 }
+
