@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/google/uuid"
 	"github.com/paper-assessment/internal/models"
 	"github.com/rabbitmq/amqp091-go"
 )
@@ -38,7 +37,13 @@ func RegisterDisburseInitiateQueue(exchange string, channel *amqp091.Channel){
 		panic(err)
 	}
 
-	err = channel.QueueBind(disburseQueue.Name, "disburse.get.user.reply", exchange, false, nil)
+	// reply
+	disburseReplyQueue, err := channel.QueueDeclare("disburse.initiate.reply.queue", true, false, false, false, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	err = channel.QueueBind(disburseReplyQueue.Name, "disburse.initiate.reply", exchange, false, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -52,22 +57,25 @@ func RegisterDisburseInitiateQueue(exchange string, channel *amqp091.Channel){
 	for messages := range disburseConsumer {
 		var request models.DisburseRequest
 		json.Unmarshal(messages.Body, &request)
-		correlationId:= uuid.New().String()
 
-		userRequestBytes, _ := json.Marshal(&models.GetUserRequest{
-			Id: request.UserId,
-		})
-		// checking user exist
+		// return
+		response := models.ApiResponse{
+			Status: 201,
+			Data: "HELLO WORLD",
+		}
+
+		log.Println(messages.CorrelationId)
+		
+		responseBytes, _ := json.Marshal(response)
 		err = channel.Publish(
-			"user.exchange", // exchange
-			"user.get.reply",      // routing key
+			"disburse.exchange", // exchange
+			"disburse.initiate.reply",      // routing key
 			false,           // mandatory
 			false,           // immediate
 			amqp091.Publishing{
 				ContentType:   "application/json",
-				CorrelationId: correlationId,
-				ReplyTo:       "user.get.reply.queue",
-				Body:          userRequestBytes,
+				CorrelationId: messages.CorrelationId,
+				Body:          responseBytes,
 			},
 		)
 
@@ -75,19 +83,40 @@ func RegisterDisburseInitiateQueue(exchange string, channel *amqp091.Channel){
 			panic(err)
 		}
 
-		ctx := context.Background()
-		msgs, err := channel.ConsumeWithContext(ctx, "user.get.reply.queue" , "", true, false, false, false, nil)
-		if err != nil {
-			panic(err)
-		}
+		// userRequestBytes, _ := json.Marshal(&models.GetUserRequest{
+		// 	Id: request.UserId,
+		// })
+		// // checking user exist
+		// err = channel.Publish(
+		// 	"user.exchange", // exchange
+		// 	"user.get.reply",      // routing key
+		// 	false,           // mandatory
+		// 	false,           // immediate
+		// 	amqp091.Publishing{
+		// 		ContentType:   "application/json",
+		// 		CorrelationId: correlationId,
+		// 		ReplyTo:       "user.get.reply.queue",
+		// 		Body:          userRequestBytes,
+		// 	},
+		// )
 
-		for d:= range msgs {
-			if(correlationId == d.CorrelationId){
-				var response models.GetUserResponse
-				json.Unmarshal(d.Body, &response)
-				log.Println("get reply: ", response)
-			}
-		}
+		// if err != nil {
+		// 	panic(err)
+		// }
+
+		// ctx := context.Background()
+		// msgs, err := channel.ConsumeWithContext(ctx, "user.get.reply.queue" , "", true, false, false, false, nil)
+		// if err != nil {
+		// 	panic(err)
+		// }
+
+		// for d:= range msgs {
+		// 	if(correlationId == d.CorrelationId){
+		// 		var response models.GetUserResponse
+		// 		json.Unmarshal(d.Body, &response)
+		// 		log.Println("get reply: ", response.Data)
+		// 	}
+		// }
 
 		// get balance
 	}

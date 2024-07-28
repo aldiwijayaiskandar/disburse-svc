@@ -6,18 +6,25 @@ import (
 	"github.com/gin-gonic/gin"
 	apigateway "github.com/paper-assessment/internal/api_gateway"
 	"github.com/paper-assessment/pkg/config"
+	"github.com/paper-assessment/pkg/rabbitmq"
 )
 
 func main(){
-	c, err := config.LoadConfig()
+	cfg, err := config.LoadConfig()
 
 	if err != nil {
 		log.Fatalln("Failed at config", err)
 	}
 
-	r := gin.Default()
+	connection, err := rabbitmq.NewRabbitMQConn(&cfg)
+	if err != nil {
+		panic(err)
+	}
+	defer connection.Close()
 
-	apigateway.RegisterRoutes(r)
+	routes := gin.Default()
 
-	r.Run(c.Port)
+	apigateway.RegisterRoutes(routes, connection)
+
+	routes.Run(cfg.Port)
 }

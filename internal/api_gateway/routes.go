@@ -1,19 +1,78 @@
 package apigateway
 
 import (
+	"encoding/json"
+	"log"
+
 	"github.com/gin-gonic/gin"
-	"github.com/paper-assessment/internal/api_gateway/routes"
+	"github.com/google/uuid"
+	"github.com/paper-assessment/internal/models"
+	"github.com/rabbitmq/amqp091-go"
 )
 
-func RegisterRoutes(r *gin.Engine) *Client {
-	svc := &Client{
+func RegisterRoutes(routes *gin.Engine, connection *amqp091.Connection) *Client {
+	client := &Client{
+		connection: connection,
 	}
 
-	r.POST("/disburse", svc.Disburse)
+	routes.POST("/disburse", client.Disburse)
 
-	return svc
+	return client
 }
 
-func (svc *Client) Disburse(ctx *gin.Context) {
-	routes.Disburse(ctx);
+func (client *Client) Disburse(ctx *gin.Context) {
+	var body models.DisburseRequest
+	if err := ctx.BindJSON(&body); err != nil {
+		panic(err)
+	}
+
+	correlationId := uuid.New().String()
+
+	channel, err := client.connection.Channel()
+	if err != nil {
+		panic(err)
+	}
+	
+	// public to disburse service
+	responseBytes, _ := json.Marshal(body)
+	channel.Publish(
+		"disburse.exchange",
+		"disburse.initiate",
+		false,           // mandatory
+		false,           // immediate
+		amqp091.Publishing{
+			ContentType:   "application/json",
+			CorrelationId: correlationId,
+			ReplyTo:       "user.get.reply.queue",
+			Body:          responseBytes,
+		},
+	)
+
+	// waiting for reply
+	msgs, err := channel.Consume(
+		"disburse.initiate.reply.queue",
+		"",
+		true, 
+		false, 
+		false, 
+		false, 
+		nil,
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for d := range msgs {
+		if(d.CorrelationId == correlationId) {
+			var response models.ApiResponse
+			json.Unmarshal(d.Body, &response)
+
+			ctx.JSON(int(response.Status), response.Data)
+			channel.Close()
+			break
+		}
+	}
+
+	log.Println("DONE")
 }

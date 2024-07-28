@@ -68,12 +68,9 @@ func RegisterGetUserQueue(exchange string, channel *amqp091.Channel, usecase *us
 			Id: request.Id,
 		})
 
-		log.Println("correlation id: ",d.CorrelationId)
+		log.Println("response: ", res)
 
 		responseBytes, _ := json.Marshal(res)
-
-		log.Println("reply to: ", d.ReplyTo)
-		log.Println("exchange to: ", d.Exchange)
 
 		channel.Publish(
 			exchange,
