@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/paper-assessment/internal/models"
+	"github.com/paper-assessment/internal/user/usecase"
 	"github.com/rabbitmq/amqp091-go"
 )
 
@@ -20,11 +22,12 @@ func Consume(connection *amqp091.Connection){
 		panic(err)
 	}
 
-	RegisterGetQueue(exchange, channel)
+	usecase := usecase.NewUserUseCase()
+
+	RegisterGetUserQueue(exchange, channel, usecase)
 }
 
-func RegisterGetQueue(exchange string, channel *amqp091.Channel){
-	// get user 
+func RegisterGetUserQueue(exchange string, channel *amqp091.Channel, usecase *usecase.UserUserCase){
 	getQueue, err := channel.QueueDeclare("user.get.queue", true, false, true, false, nil)
 	if err != nil {
 		panic(err)
@@ -43,5 +46,11 @@ func RegisterGetQueue(exchange string, channel *amqp091.Channel){
 
 	for messages := range disburseConsumer {
 		log.Println(string(messages.Body))
+
+		user :=  usecase.GetUser(models.GetUserRequest{
+			Id: "test",
+		})
+		
+		log.Println(user)
 	}
 }
