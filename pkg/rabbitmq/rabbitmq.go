@@ -2,10 +2,26 @@ package rabbitmq
 
 import (
 	"github.com/paper-assessment/pkg/config"
-	"github.com/rabbitmq/amqp091-go"
+	"github.com/streadway/amqp"
 )
 
 // Initialize new RabbitMQ connection
-func NewRabbitMQConn(cfg *config.Config) (*amqp091.Connection, error) {
-	return amqp091.Dial(cfg.BrokerUrl)
+func NewConnection(cfg *config.Config) (*amqp.Connection, error) {
+	return amqp.Dial(cfg.BrokerUrl)
+}
+
+func getExchangeName() string {
+	return "payment_exchange"
+}
+
+func declareExchange(ch *amqp.Channel) error {
+	return ch.ExchangeDeclare(
+		getExchangeName(), // name
+		"direct",
+		true,
+		false,
+		false, 
+		false, 
+		nil,
+	)
 }
