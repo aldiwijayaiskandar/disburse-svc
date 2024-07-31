@@ -26,12 +26,12 @@ func (h *RabbitMQHandler) GetUserBalanceHandler(d *amqp.Delivery) {
 			Message:   &errorMessage,
 		})
 
-		h.publisher.Push(d.ReplyTo, body)
+		h.publisher.Push(d.ReplyTo, body, d.CorrelationId)
 		return
 	}
 
 	res := h.walletUsecase.GetUserBalance(req.UserId)
 	body, _ := json.Marshal(res)
 
-	h.publisher.Push(d.ReplyTo, body)
+	h.publisher.Push(d.ReplyTo, body, d.CorrelationId)
 }

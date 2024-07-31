@@ -8,8 +8,8 @@ type MockPublisher struct {
 	mock.Mock
 }
 
-func (m *MockPublisher) Push(key string, body []byte) error {
-	m.Called(key, body)
+func (m *MockPublisher) Push(key string, body []byte, correlationId string) error {
+	m.Called(key, body, correlationId)
 
 	return nil
 }

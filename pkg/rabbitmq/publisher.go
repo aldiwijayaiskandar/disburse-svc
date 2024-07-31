@@ -12,7 +12,7 @@ type Publisher struct {
 }
 
 type PublisherInterface interface {
-	Push(key string, body []byte) error
+	Push(key string, body []byte, correlationId string) error
 }
 
 func (p *Publisher) setup() error {
@@ -26,7 +26,7 @@ func (p *Publisher) setup() error {
 }
 
 // Push (Publish) a specified message to the AMQP exchange
-func (p *Publisher) Push(key string, body []byte) error {
+func (p *Publisher) Push(key string, body []byte, correlationId string) error {
 	channel, err := p.conn.Channel()
 	if err != nil {
 		return err
@@ -40,8 +40,10 @@ func (p *Publisher) Push(key string, body []byte) error {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        body,
+			ContentType:   "text/plain",
+			Body:          body,
+			CorrelationId: correlationId,
+			ReplyTo:       "reply_queue",
 		},
 	)
 
