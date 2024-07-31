@@ -26,7 +26,7 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 
-	usecase.NewUserUsecase(userRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo)
 
-	rabbitmq_delivery.Consume(conn)
+	rabbitmq_delivery.Consume(conn, userUsecase)
 }

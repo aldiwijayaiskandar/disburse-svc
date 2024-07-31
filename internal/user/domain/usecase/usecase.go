@@ -14,5 +14,7 @@ type UserUsecaseInterface interface {
 }
 
 func NewUserUsecase(userRepo repository_interface.UserRepositoryInterface) UserUsecaseInterface {
-	return &UserUsecase{}
+	return &UserUsecase{
+		userRepo: userRepo,
+	}
 }
