@@ -59,7 +59,7 @@ func TestWalletRepository_Get(t *testing.T) {
 		// mock query
 		mock.ExpectQuery(`SELECT \* FROM "wallets" WHERE user_id = \$1`).
 			WithArgs(nonExistantUser).
-			WillReturnError(gorm.ErrRecordNotFound)
+			WillReturnRows(sqlmock.NewRows([]string{"user_id", "balance"}))
 
 		// call get wallet
 		ctx := context.TODO()
