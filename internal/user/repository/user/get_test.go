@@ -59,7 +59,7 @@ func TestUserRepository_Get(t *testing.T) {
 		// mock query
 		mock.ExpectQuery(`SELECT \* FROM "users" WHERE id = \$1`).
 			WithArgs(nonExistantUser).
-			WillReturnError(gorm.ErrRecordNotFound)
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name"}))
 
 		// call get user
 		ctx := context.TODO()
