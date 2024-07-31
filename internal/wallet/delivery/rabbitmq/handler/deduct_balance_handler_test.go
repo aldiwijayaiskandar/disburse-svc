@@ -14,8 +14,10 @@ func TestDeductBalanceHandler(t *testing.T) {
 	mockPublisher := &mocks.MockPublisher{}
 	mockWalletUsecase := &mocks.WalletUsecase{}
 	replyTo := "reply_queue"
-	expectedUserId := "12345"
-	expectedBalance := 5000.00
+	request := models.DeductBalanceRequest{
+		UserId: "1235",
+		Amount: 5000.00,
+	}
 
 	handler := &RabbitMQHandler{
 		publisher:     mockPublisher,
@@ -26,37 +28,38 @@ func TestDeductBalanceHandler(t *testing.T) {
 		mockPublisher.ExpectedPushAnyBody(replyTo)
 
 		body, _ := json.Marshal(map[string]interface{}{
-			"id": expectedUserId,
+			"id": request.UserId,
 		})
 
-		handler.GetUserBalanceHandler(&amqp.Delivery{
+		handler.DeductBalanceHandler(&amqp.Delivery{
 			ReplyTo: replyTo,
 			Body:    body,
 		})
 
-		mockWalletUsecase.AssertNotCalled(t, "GetUserBalance")
+		mockWalletUsecase.AssertNotCalled(t, "DeductBalance")
 
 		mockPublisher.Reset()
 	})
 
 	t.Run("success", func(t *testing.T) {
 		mockPublisher.ExpectedPushAnyBody(replyTo)
-		mockWalletUsecase.On("GetUserBalance", expectedUserId).Return(&models.GetUserBalanceResponse{
+		mockWalletUsecase.On("DeductBalance", request).Return(&models.DeductBalanceResponse{
 			Status:    constants.Success,
-			Balance:   &expectedBalance,
+			Balance:   &request.Amount,
 			ErrorCode: constants.NoError,
 		})
 
-		body, _ := json.Marshal(map[string]interface{}{
-			"userId": expectedUserId,
-		})
+		body, _ := json.Marshal(request)
 
-		handler.GetUserBalanceHandler(&amqp.Delivery{
+		// call deduct balance
+		handler.DeductBalanceHandler(&amqp.Delivery{
 			ReplyTo: replyTo,
 			Body:    body,
 		})
 
-		mockWalletUsecase.AssertCalled(t, "GetUserBalance", expectedUserId)
+		// assert
+		mockWalletUsecase.AssertCalled(t, "DeductBalance", request)
+		mockWalletUsecase.AssertNumberOfCalls(t, "DeductBalance", 1)
 
 		mockPublisher.Reset()
 	})
