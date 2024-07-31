@@ -1,29 +1,32 @@
 package main
 
 import (
-	"github.com/paper-assessment/internal/wallet"
-	"github.com/paper-assessment/internal/wallet/database"
-	"github.com/paper-assessment/internal/wallet/repository"
+	"github.com/paper-assessment/internal/user/database"
+	rabbitmq_delivery "github.com/paper-assessment/internal/wallet/delivery/rabbitmq"
+	"github.com/paper-assessment/internal/wallet/domain/usecase"
+	repository "github.com/paper-assessment/internal/wallet/repository/wallet"
 	"github.com/paper-assessment/pkg/config"
 	"github.com/paper-assessment/pkg/rabbitmq"
 )
 
-func main(){
+func main() {
 	cfg, err := config.LoadConfig()
 
 	if err != nil {
 		panic(err)
 	}
 
-	connection, err := rabbitmq.NewRabbitMQConn(&cfg)
+	conn, err := rabbitmq.NewConnection(&cfg)
 	if err != nil {
 		panic(err)
 	}
-	defer connection.Close()
+	defer conn.Close()
 
 	db := database.NewDatabaseConn(cfg.WalletDatabaseUrl)
 
-	repository := repository.NewWalletRepository(db)
+	walletRepo := repository.NewWalletRepository(db)
 
-	wallet.Consume(connection, repository)
+	walletUsecase := usecase.NewWalletUsecase(walletRepo)
+
+	rabbitmq_delivery.Consume(conn, walletUsecase)
 }

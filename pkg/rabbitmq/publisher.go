@@ -22,7 +22,7 @@ func (p *Publisher) setup() error {
 }
 
 // Push (Publish) a specified message to the AMQP exchange
-func (p *Publisher) Push(event string, severity string) error {
+func (p *Publisher) Push(event string, key string) error {
 	channel, err := p.conn.Channel()
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (p *Publisher) Push(event string, severity string) error {
 
 	channel.Publish(
 		getExchangeName(),
-		severity,
+		key,
 		false,
 		false,
 		amqp.Publishing{

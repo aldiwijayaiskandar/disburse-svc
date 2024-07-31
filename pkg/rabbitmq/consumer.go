@@ -35,7 +35,7 @@ func NewConsumer(conn *amqp.Connection) (Consumer, error) {
 
 // Listen will listen for all new Queue publications
 // and print them to the console.
-func (c *Consumer) Listen(topics []string) error {
+func (c *Consumer) Listen(topics []string, listener func(delivery *amqp.Delivery)) error {
 	ch, err := c.conn.Channel()
 	if err != nil {
 		return err
@@ -43,12 +43,12 @@ func (c *Consumer) Listen(topics []string) error {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		c.queueName,    // name
-		false, // durable
-		false, // delete when unused
-		true,  // exclusive
-		false, // no-wait
-		nil,   // arguments
+		c.queueName, // name
+		false,       // durable
+		false,       // delete when unused
+		true,        // exclusive
+		false,       // no-wait
+		nil,         // arguments
 	)
 	if err != nil {
 		return err
@@ -77,6 +77,7 @@ func (c *Consumer) Listen(topics []string) error {
 	go func() {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
+			listener(&d)
 		}
 	}()
 
