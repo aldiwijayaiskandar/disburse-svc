@@ -14,12 +14,12 @@ import (
 )
 
 func TestWalletRepository_Get(t *testing.T) {
-	// Create sqlmock database connection and mock
+	// create sql mock connection
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
 
-	// Create GORM DB from sqlmock connection
+	// create gorm connection
 	gormDB, err := gorm.Open(postgres.New(postgres.Config{
 		Conn: db,
 	}), &gorm.Config{})
@@ -28,29 +28,32 @@ func TestWalletRepository_Get(t *testing.T) {
 	repo := repository.NewWalletRepository(gormDB)
 
 	t.Run("wallet found", func(t *testing.T) {
+		// expected variables
 		expectedUserId := "test_user"
 		expectedBalance := 100.50
+
 		// mock query
 		mock.ExpectQuery(`SELECT \* FROM "wallets" WHERE user_id = \$1`).
 			WithArgs(expectedUserId).
 			WillReturnRows(sqlmock.NewRows([]string{"user_id", "balance"}).
 				AddRow(expectedUserId, expectedBalance))
 
-		// Call the method to be tested
+		// call get wallet
 		ctx := context.TODO()
 		wallet, err := repo.Get(ctx, expectedUserId)
 
-		// Assertions
+		// assertion
 		assert.NoError(t, err)
 		assert.NotNil(t, wallet)
 		assert.Equal(t, expectedUserId, wallet.UserId)
 		assert.Equal(t, expectedBalance, wallet.Balance)
 
-		// Ensure all expectations were met
+		// ensure no error
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
 	t.Run("wallet not found found", func(t *testing.T) {
+		// expected variables
 		nonExistantUser := "not_exist_user"
 
 		// mock query
@@ -58,16 +61,17 @@ func TestWalletRepository_Get(t *testing.T) {
 			WithArgs(nonExistantUser).
 			WillReturnError(gorm.ErrRecordNotFound)
 
-		// Call the method to be tested
+		// call get wallet
 		ctx := context.TODO()
 		wallet, err := repo.Get(ctx, nonExistantUser)
 
-		// Assertions
+		// assertion
 		assert.NoError(t, err)
 		assert.Nil(nil, wallet)
 	})
 
-	t.Run("Database Error", func(t *testing.T) {
+	t.Run("database error", func(t *testing.T) {
+		// expected variables
 		expectedUserId := "test_user"
 
 		// mock query
@@ -75,10 +79,10 @@ func TestWalletRepository_Get(t *testing.T) {
 			WithArgs(expectedUserId).
 			WillReturnError(errors.New("database error"))
 
-		// Call the function with expected user ID
+		// call repository
 		wallet, err := repo.Get(context.Background(), expectedUserId)
 
-		// Assert expectations
+		// assertion
 		assert.Error(t, err)
 		assert.EqualError(t, err, "database error")
 		assert.Nil(t, wallet)
