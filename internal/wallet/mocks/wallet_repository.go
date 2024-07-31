@@ -23,7 +23,12 @@ func (m *MockWalletRepository) Get(ctx context.Context, userId string) (*models.
 
 func (m *MockWalletRepository) DeductBalance(ctx context.Context, request models.DeductBalanceRequest) error {
 	args := m.Called(ctx, request)
-	return args.Error(1)
+
+	if len(args) > 1 {
+		return args.Error(1)
+	}
+
+	return nil
 }
 
 func (m *MockWalletRepository) Reset() {

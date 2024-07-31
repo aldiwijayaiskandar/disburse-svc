@@ -11,6 +11,7 @@ type WalletUseCase struct {
 
 type WalletUsecaseInterface interface {
 	GetUserBalance(id string) *models.GetUserBalanceResponse
+	DeductBalance(request models.DeductBalanceRequest) *models.DeductBalanceResponse
 }
 
 func NewWalletUsecase(walletRepo repository_interface.WalletRepositoryInterface) WalletUsecaseInterface {
