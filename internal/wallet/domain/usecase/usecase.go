@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"github.com/paper-assessment/internal/wallet/domain/models"
 	repository_interface "github.com/paper-assessment/internal/wallet/domain/repository"
 )
 
@@ -9,6 +10,7 @@ type WalletUseCase struct {
 }
 
 type WalletUsecaseInterface interface {
+	GetUserBalance(id string) *models.GetUserBalanceResponse
 }
 
 func NewWalletUsecase(walletRepo repository_interface.WalletRepositoryInterface) WalletUsecaseInterface {
