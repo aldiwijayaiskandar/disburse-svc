@@ -26,7 +26,6 @@ func (m *MockWalletRepository) DeductBalance(ctx context.Context, request models
 	return args.Error(1)
 }
 
-// Reset function to clear expectations and calls
 func (m *MockWalletRepository) Reset() {
-	m.ExpectedCalls = make([]*mock.Call, 0) // Create an empty slice of pointers to mock.Call
+	m.ExpectedCalls = make([]*mock.Call, 0)
 }

@@ -11,6 +11,10 @@ type Publisher struct {
 	conn *amqp.Connection
 }
 
+type PublisherInterface interface {
+	Push(key string, body []byte) error
+}
+
 func (p *Publisher) setup() error {
 	channel, err := p.conn.Channel()
 	if err != nil {
@@ -22,7 +26,7 @@ func (p *Publisher) setup() error {
 }
 
 // Push (Publish) a specified message to the AMQP exchange
-func (p *Publisher) Push(event string, key string) error {
+func (p *Publisher) Push(key string, body []byte) error {
 	channel, err := p.conn.Channel()
 	if err != nil {
 		return err
@@ -37,24 +41,25 @@ func (p *Publisher) Push(event string, key string) error {
 		false,
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:        []byte(event),
+			Body:        body,
 		},
 	)
-	log.Printf("Sending message: %s -> %s", event, getExchangeName())
+
+	log.Printf("Sending message: %s -> %s", body, getExchangeName())
 	return nil
 }
 
-// NewEventEmitter returns a new event.Emitter object
+// NewPublisher returns a new event.Emitter object
 // ensuring that the object is initialised, without error
-func NewEventEmitter(conn *amqp.Connection) (Publisher, error) {
-	emitter := Publisher{
+func NewPublisher(conn *amqp.Connection) (PublisherInterface, error) {
+	publisher := &Publisher{
 		conn: conn,
 	}
 
-	err := emitter.setup()
+	err := publisher.setup()
 	if err != nil {
-		return Publisher{}, err
+		return &Publisher{}, err
 	}
 
-	return emitter, nil
+	return publisher, nil
 }

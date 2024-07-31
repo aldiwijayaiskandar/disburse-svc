@@ -11,6 +11,9 @@ import (
 
 func Consume(conn *amqp.Connection, usecase usecase.WalletUsecaseInterface) {
 	consumer, err := rabbitmq.NewConsumer(conn)
+	publisher, err := rabbitmq.NewPublisher(conn)
+
+	handler := handler.NewRabbitMQHandler(publisher, usecase)
 
 	if err != nil {
 		log.Fatalln("create consumer error")
@@ -18,9 +21,9 @@ func Consume(conn *amqp.Connection, usecase usecase.WalletUsecaseInterface) {
 
 	// listen to get user balance request
 	consumer.Listen(
-		[]string{"wallet.balance.get"},
+		[]string{"wallet.balance.get.request"},
 		func(delivery *amqp.Delivery) {
-			handler.GetUserBalanceHandler(delivery, usecase)
+			handler.GetUserBalanceHandler(delivery)
 		},
 	)
 }

@@ -10,7 +10,7 @@ import (
 )
 
 func (r *WalletRepository) Get(ctx context.Context, userId string) (*models.Wallet, error) {
-	var wallet *schema.Wallet
+	var wallet schema.Wallet
 
 	if err := r.db.WithContext(ctx).Where("user_id = ?", userId).Find(&wallet).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

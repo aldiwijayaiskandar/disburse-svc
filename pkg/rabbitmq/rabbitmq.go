@@ -11,7 +11,7 @@ func NewConnection(cfg *config.Config) (*amqp.Connection, error) {
 }
 
 func getExchangeName() string {
-	return "payment_exchange"
+	return "wallet_exchange"
 }
 
 func declareExchange(ch *amqp.Channel) error {
@@ -20,8 +20,8 @@ func declareExchange(ch *amqp.Channel) error {
 		"direct",
 		true,
 		false,
-		false, 
-		false, 
+		false,
+		false,
 		nil,
 	)
 }

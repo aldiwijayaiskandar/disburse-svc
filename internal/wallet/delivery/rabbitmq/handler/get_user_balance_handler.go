@@ -3,16 +3,35 @@ package handler
 import (
 	"encoding/json"
 
-	"github.com/paper-assessment/internal/models"
-	"github.com/paper-assessment/internal/wallet/domain/usecase"
+	"github.com/paper-assessment/internal/wallet/domain/models"
+	constants "github.com/paper-assessment/pkg/contants"
+	"github.com/paper-assessment/pkg/utils"
 	"github.com/streadway/amqp"
 )
 
-func GetUserBalanceHandler(d *amqp.Delivery, usecase usecase.WalletUsecaseInterface) {
+func (h *RabbitMQHandler) GetUserBalanceHandler(d *amqp.Delivery) {
 	var req models.GetUserBalanceRequest
-	err := json.Unmarshal(d.Body, &req)
+	json.Unmarshal(d.Body, &req)
+
+	// validate body
+	err := utils.ValidateBody(req)
 
 	if err != nil {
+		errorMessage := err.Error()
+
+		body, _ := json.Marshal(&models.GetUserBalanceResponse{
+			Status:    constants.Error,
+			Balance:   nil,
+			ErrorCode: constants.InvalidRequest,
+			Message:   &errorMessage,
+		})
+
+		h.publisher.Push(d.ReplyTo, body)
 		return
 	}
+
+	res := h.walletUsecase.GetUserBalance(req.UserId)
+	body, _ := json.Marshal(res)
+
+	h.publisher.Push(d.ReplyTo, body)
 }

@@ -8,4 +8,5 @@ type GetUserBalanceResponse struct {
 	Status    constants.StatusCode `json:"status"`
 	Balance   *float64             `json:"balance"`
 	ErrorCode constants.ErrorCode  `json:"errorCode"`
+	Message   *string              `json:"message"`
 }
