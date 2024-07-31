@@ -20,10 +20,22 @@ func Consume(conn *amqp.Connection, usecase usecase.WalletUsecaseInterface) {
 	}
 
 	// listen to get user balance request
-	consumer.Listen(
-		[]string{"wallet.balance.get.request"},
-		func(delivery *amqp.Delivery) {
-			handler.GetUserBalanceHandler(delivery)
-		},
-	)
+	forever := make(chan bool)
+	go func() {
+		go consumer.Listen(
+			[]string{"wallet.balance.get.request"},
+			func(delivery *amqp.Delivery) {
+				handler.GetUserBalanceHandler(delivery)
+			},
+		)
+
+		go consumer.Listen(
+			[]string{"wallet.balance.deduct.request"},
+			func(delivery *amqp.Delivery) {
+				handler.DeductBalanceHandler(delivery)
+			},
+		)
+	}()
+
+	<-forever
 }
