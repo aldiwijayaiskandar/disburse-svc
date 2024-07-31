@@ -1,8 +1,12 @@
 package repository
 
-import "github.com/paper-assessment/internal/wallet/domain/models"
+import (
+	"context"
+
+	"github.com/paper-assessment/internal/wallet/domain/models"
+)
 
 type WalletRepository interface {
-	Get(userId string) (*models.Wallet, error)
-	Update(request models.UpdateBalanceRequest) (*models.Wallet, error)
+	Get(ctx context.Context, userId string) (*models.Wallet, error)
+	Update(ctx context.Context, request models.UpdateBalanceRequest) (*models.Wallet, error)
 }
