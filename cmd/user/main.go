@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/paper-assessment/internal/user/database"
 	rabbitmq_delivery "github.com/paper-assessment/internal/user/delivery/rabbitmq"
+	repository "github.com/paper-assessment/internal/user/repository/user"
 	"github.com/paper-assessment/pkg/config"
 	"github.com/paper-assessment/pkg/rabbitmq"
 )
@@ -20,7 +21,9 @@ func main() {
 	}
 	defer conn.Close()
 
-	database.NewDatabaseConn(cfg.UserDatabaseUrl)
+	db := database.NewDatabaseConn(cfg.UserDatabaseUrl)
+
+	repository.NewUserRepository(db)
 
 	rabbitmq_delivery.Consume(conn)
 }
