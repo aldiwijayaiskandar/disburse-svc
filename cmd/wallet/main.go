@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/paper-assessment/internal/user/database"
+	"github.com/paper-assessment/internal/wallet/database"
 	rabbitmq_delivery "github.com/paper-assessment/internal/wallet/delivery/rabbitmq"
 	"github.com/paper-assessment/internal/wallet/domain/usecase"
 	repository "github.com/paper-assessment/internal/wallet/repository/wallet"
