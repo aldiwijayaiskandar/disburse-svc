@@ -25,12 +25,12 @@ func (h *RabbitMQHandler) DisburseRequestHandler(d *amqp.Delivery) {
 			Message:   &errorMessage,
 		})
 
-		h.publisher.Push(d.ReplyTo, body, d.CorrelationId)
+		h.publisher.Reply("disburse.request.reply", body, d.CorrelationId)
 		return
 	}
 
 	res := h.disburseUsecase.Disburse(req, d.CorrelationId)
 	body, _ := json.Marshal(res)
 
-	h.publisher.Push(d.ReplyTo, body, d.CorrelationId)
+	h.publisher.Reply("disburse.request.reply", body, d.CorrelationId)
 }

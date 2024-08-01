@@ -26,12 +26,12 @@ func (h *RabbitMQHandler) GetUserHandler(d *amqp.Delivery) {
 			Message:   &errorMessage,
 		})
 
-		h.publisher.Push(d.ReplyTo, body, d.CorrelationId)
+		h.publisher.Reply(d.ReplyTo, body, d.CorrelationId)
 		return
 	}
 
 	res := h.userUsecase.GetUser(req)
 	body, _ := json.Marshal(res)
 
-	h.publisher.Push(d.ReplyTo, body, d.CorrelationId)
+	h.publisher.Reply(d.ReplyTo, body, d.CorrelationId)
 }

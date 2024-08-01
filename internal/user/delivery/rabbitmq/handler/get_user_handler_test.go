@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/paper-assessment/internal/user/domain/models"
 	"github.com/paper-assessment/internal/user/mocks"
 	constants "github.com/paper-assessment/pkg/contants"
@@ -13,6 +14,8 @@ import (
 func TestDeductBalanceHandler(t *testing.T) {
 	mockPublisher := &mocks.MockPublisher{}
 	mockUserUsecase := &mocks.MockUserUsecase{}
+
+	correlationId := uuid.New().String()
 	replyTo := "reply_queue"
 	request := models.GetUserRequest{
 		Id: "1245",
@@ -24,25 +27,26 @@ func TestDeductBalanceHandler(t *testing.T) {
 	}
 
 	t.Run("error request", func(t *testing.T) {
-		mockPublisher.ExpectedPushAnyBody(replyTo)
+		mockPublisher.ExpectedReplyAnyBody(replyTo, correlationId)
 
 		body, _ := json.Marshal(map[string]interface{}{
 			"ids": request.Id,
 		})
 
 		handler.GetUserHandler(&amqp.Delivery{
-			ReplyTo: replyTo,
-			Body:    body,
+			ReplyTo:       replyTo,
+			Body:          body,
+			CorrelationId: correlationId,
 		})
 
-		mockPublisher.AssertNumberOfCalls(t, "Push", 1)
+		mockPublisher.AssertNumberOfCalls(t, "Reply", 1)
 		mockUserUsecase.AssertNotCalled(t, "DeductBalance")
 
 		mockPublisher.Reset()
 	})
 
 	t.Run("success", func(t *testing.T) {
-		mockPublisher.ExpectedPushAnyBody(replyTo)
+		mockPublisher.ExpectedReplyAnyBody(replyTo, correlationId)
 		mockUserUsecase.On("GetUser", request).Return(&models.GetUserResponse{
 			Status: constants.Success,
 			User: &models.User{
@@ -56,8 +60,9 @@ func TestDeductBalanceHandler(t *testing.T) {
 
 		// call deduct balance
 		handler.GetUserHandler(&amqp.Delivery{
-			ReplyTo: replyTo,
-			Body:    body,
+			ReplyTo:       replyTo,
+			Body:          body,
+			CorrelationId: correlationId,
 		})
 
 		// assert
