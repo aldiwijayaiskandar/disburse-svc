@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/paper-assessment/internal/user/domain/models"
 	constants "github.com/paper-assessment/pkg/contants"
@@ -25,12 +26,14 @@ func NewUserService(consumer rabbitmq.ConsumerInterface, publisher rabbitmq.Publ
 }
 
 func (s *UserService) GetUser(request *models.GetUserRequest, correlationId string) models.GetUserResponse {
+	log.Println("PUSHH")
 	// push to request user
+	getUserReplyKey := "user.get.request.reply"
 	getUserRequestBody, _ := json.Marshal(&request)
-	s.publisher.Push("user.get.request", getUserRequestBody, correlationId)
+	s.publisher.Push("user.get.request", "user.get.request.reply", getUserRequestBody, correlationId)
 
 	// waiting for reply
-	res, err := s.consumer.WaitReply(correlationId)
+	res, err := s.consumer.WaitReply(getUserReplyKey, correlationId)
 
 	if err != nil {
 		// throw internal server error

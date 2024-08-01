@@ -14,7 +14,7 @@ type Consumer struct {
 
 type ConsumerInterface interface {
 	Listen(topics []string, listener func(delivery *amqp.Delivery)) error
-	WaitReply(correlationId string) (*amqp.Delivery, error)
+	WaitReply(key string, correlationId string) (*amqp.Delivery, error)
 }
 
 func (c Consumer) setup() error {
@@ -93,7 +93,7 @@ func (c Consumer) Listen(topics []string, listener func(delivery *amqp.Delivery)
 	return nil
 }
 
-func (c Consumer) WaitReply(correlationId string) (*amqp.Delivery, error) {
+func (c Consumer) WaitReply(key string, correlationId string) (*amqp.Delivery, error) {
 	ch, err := c.conn.Channel()
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (c Consumer) WaitReply(correlationId string) (*amqp.Delivery, error) {
 
 	ch.QueueBind(
 		"reply_queue",
-		"message.reply",
+		key,
 		getExchangeName(),
 		false,
 		nil,
@@ -130,7 +130,9 @@ func (c Consumer) WaitReply(correlationId string) (*amqp.Delivery, error) {
 
 	go func() {
 		for d := range msgs {
-			if d.CorrelationId == correlationId {
+			log.Println(d.RoutingKey)
+			log.Println(d.CorrelationId)
+			if d.RoutingKey == key && d.CorrelationId == correlationId {
 				log.Printf("Received reply message: %s", d.Body)
 				replyChan <- &d
 				return

@@ -44,7 +44,7 @@ func (p *Publisher) Push(key string, replyTo string, body []byte, correlationId 
 			ContentType:   "text/plain",
 			Body:          body,
 			CorrelationId: correlationId,
-			ReplyTo:       "message.reply",
+			ReplyTo:       replyTo,
 		},
 	)
 
@@ -90,7 +90,7 @@ func (p *Publisher) Reply(key string, body []byte, correlationId string) error {
 		},
 	)
 
-	log.Printf("Sending message:  %s -> %s", body, getExchangeName())
+	log.Printf("Reply message:  %s -> %s -> %s", body, getExchangeName(), key)
 	return nil
 }
 

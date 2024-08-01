@@ -37,7 +37,7 @@ func TestWalletService_GetUserBalance(t *testing.T) {
 
 		t.Run("success", func(t *testing.T) {
 			// mocking
-			mockPublisher.ExpectedPushAnyBody("wallet.balance.get.request", correlationId)
+			mockPublisher.ExpectedPushAnyBody("wallet.balance.get.request", "wallet.balance.get.request.reply", correlationId)
 			mockConsumer.On("WaitReply", correlationId).Return(&amqp.Delivery{
 				Body: resByte,
 			}, nil)
@@ -57,7 +57,7 @@ func TestWalletService_GetUserBalance(t *testing.T) {
 
 		t.Run("consumer error", func(t *testing.T) {
 			// mocks
-			mockPublisher.ExpectedPushAnyBody("wallet.balance.get.request", correlationId)
+			mockPublisher.ExpectedPushAnyBody("wallet.balance.get.request", "wallet.balance.get.request.reply", correlationId)
 			mockConsumer.On("WaitReply", correlationId).Return(nil, errors.New("consumer_err"))
 
 			// call get user
@@ -87,7 +87,7 @@ func TestWalletService_GetUserBalance(t *testing.T) {
 		resByte, _ := json.Marshal(response)
 
 		t.Run("success", func(t *testing.T) {
-			mockPublisher.ExpectedPushAnyBody("wallet.balance.deduct.request", correlationId)
+			mockPublisher.ExpectedPushAnyBody("wallet.balance.deduct.request", "wallet.balance.deduct.request.reply", correlationId)
 			mockConsumer.On("WaitReply", correlationId).Return(&amqp.Delivery{
 				Body: resByte,
 			}, nil)
@@ -106,7 +106,7 @@ func TestWalletService_GetUserBalance(t *testing.T) {
 		})
 
 		t.Run("consumer error", func(t *testing.T) {
-			mockPublisher.ExpectedPushAnyBody("wallet.balance.deduct.request", correlationId)
+			mockPublisher.ExpectedPushAnyBody("wallet.balance.deduct.request", "wallet.balance.deduct.request.reply", correlationId)
 			mockConsumer.On("WaitReply", correlationId).Return(nil, errors.New("consumer_err"))
 
 			// call get user

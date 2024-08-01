@@ -37,7 +37,7 @@ func TestUserService(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// mocking
-		mockPublisher.ExpectedPushAnyBody("user.get.request", correlationId)
+		mockPublisher.ExpectedPushAnyBody("user.get.request", "user.get.request.reply", correlationId)
 		mockConsumer.On("WaitReply", correlationId).Return(&amqp.Delivery{
 			Body: resByte,
 		}, nil)
@@ -57,7 +57,7 @@ func TestUserService(t *testing.T) {
 
 	t.Run("consumer error", func(t *testing.T) {
 		// mocks
-		mockPublisher.ExpectedPushAnyBody("user.get.request", correlationId)
+		mockPublisher.ExpectedPushAnyBody("user.get.request", "user.get.request.reply", correlationId)
 		mockConsumer.On("WaitReply", correlationId).Return(nil, errors.New("consumer_err"))
 
 		// call get user

@@ -27,11 +27,12 @@ func NewWalletService(consumer rabbitmq.ConsumerInterface, publisher rabbitmq.Pu
 
 func (s *WalletService) GetUserBalance(request *models.GetUserBalanceRequest, correlationId string) models.GetUserBalanceResponse {
 	// push to request user
+	getUserBalanceReplyKey := "wallet.balance.get.request.reply"
 	getUserRequestBody, _ := json.Marshal(&request)
-	s.publisher.Push("wallet.balance.get.request", getUserRequestBody, correlationId)
+	s.publisher.Push("wallet.balance.get.request", getUserBalanceReplyKey, getUserRequestBody, correlationId)
 
 	// waiting for reply
-	res, err := s.consumer.WaitReply(correlationId)
+	res, err := s.consumer.WaitReply(getUserBalanceReplyKey, correlationId)
 
 	if err != nil {
 		// throw internal server error
@@ -49,11 +50,12 @@ func (s *WalletService) GetUserBalance(request *models.GetUserBalanceRequest, co
 
 func (s *WalletService) DeductUserBalance(request *models.DeductBalanceRequest, correlationId string) models.DeductBalanceResponse {
 	// push to request deduct balance
+	deductBalanceReplyKey := "wallet.balance.deduct.requestreply"
 	deductBalanceRequestBody, _ := json.Marshal(&request)
-	s.publisher.Push("wallet.balance.deduct.request", deductBalanceRequestBody, correlationId)
+	s.publisher.Push("wallet.balance.deduct.request", deductBalanceReplyKey, deductBalanceRequestBody, correlationId)
 
 	// waiting for reply
-	res, err := s.consumer.WaitReply(correlationId)
+	res, err := s.consumer.WaitReply(deductBalanceReplyKey, correlationId)
 
 	if err != nil {
 		// throw internal server error
