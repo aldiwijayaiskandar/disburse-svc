@@ -12,7 +12,8 @@ type Publisher struct {
 }
 
 type PublisherInterface interface {
-	Push(key string, body []byte, correlationId string) error
+	Push(key string, replyTo string, body []byte, correlationId string) error
+	Reply(key string, body []byte, correlationId string) error
 }
 
 func (p *Publisher) setup() error {
@@ -26,7 +27,7 @@ func (p *Publisher) setup() error {
 }
 
 // Push (Publish) a specified message to the AMQP exchange
-func (p *Publisher) Push(key string, body []byte, correlationId string) error {
+func (p *Publisher) Push(key string, replyTo string, body []byte, correlationId string) error {
 	channel, err := p.conn.Channel()
 	if err != nil {
 		return err
@@ -44,6 +45,48 @@ func (p *Publisher) Push(key string, body []byte, correlationId string) error {
 			Body:          body,
 			CorrelationId: correlationId,
 			ReplyTo:       "message.reply",
+		},
+	)
+
+	log.Printf("Sending message:  %s -> %s", body, getExchangeName())
+	return nil
+}
+
+func (p *Publisher) Reply(key string, body []byte, correlationId string) error {
+	channel, err := p.conn.Channel()
+	if err != nil {
+		return err
+	}
+
+	q, _ := channel.QueueDeclare(
+		"reply_queue", // name
+		false,         // durable
+		false,         // delete when unused
+		false,         // exclusive
+		false,         // no-wait
+		nil,           // arguments
+	)
+
+	channel.QueueBind(
+		q.Name,
+		key,
+		getExchangeName(),
+		false,
+		nil,
+	)
+
+	defer channel.Close()
+
+	channel.Publish(
+		getExchangeName(),
+		key,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType:   "text/plain",
+			Body:          body,
+			CorrelationId: correlationId,
+			ReplyTo:       key,
 		},
 	)
 
