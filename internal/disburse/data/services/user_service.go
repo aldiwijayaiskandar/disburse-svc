@@ -14,7 +14,7 @@ type UserService struct {
 }
 
 type UserServiceInterface interface {
-	GetUser(request *models.GetUserRequest, correlationId string) *models.GetUserResponse
+	GetUser(request *models.GetUserRequest, correlationId string) models.GetUserResponse
 }
 
 func NewUserService(consumer rabbitmq.ConsumerInterface, publisher rabbitmq.PublisherInterface) UserServiceInterface {
@@ -24,7 +24,7 @@ func NewUserService(consumer rabbitmq.ConsumerInterface, publisher rabbitmq.Publ
 	}
 }
 
-func (s *UserService) GetUser(request *models.GetUserRequest, correlationId string) *models.GetUserResponse {
+func (s *UserService) GetUser(request *models.GetUserRequest, correlationId string) models.GetUserResponse {
 	// push to request user
 	getUserRequestBody, _ := json.Marshal(&request)
 	s.publisher.Push("user.get.request", getUserRequestBody, correlationId)
@@ -34,7 +34,7 @@ func (s *UserService) GetUser(request *models.GetUserRequest, correlationId stri
 
 	if err != nil {
 		// throw internal server error
-		return &models.GetUserResponse{
+		return models.GetUserResponse{
 			Status:    constants.Error,
 			ErrorCode: constants.InternalServerError,
 		}
@@ -43,5 +43,5 @@ func (s *UserService) GetUser(request *models.GetUserRequest, correlationId stri
 	var userRes models.GetUserResponse
 	json.Unmarshal(res.Body, &userRes)
 
-	return &userRes
+	return userRes
 }

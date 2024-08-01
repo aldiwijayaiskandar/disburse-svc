@@ -14,8 +14,8 @@ type WalletService struct {
 }
 
 type WalletServiceInterface interface {
-	GetUserBalance(request *models.GetUserBalanceRequest, correlationId string) *models.GetUserBalanceResponse
-	DeductUserBalance(request *models.DeductBalanceRequest, correlationId string) *models.DeductBalanceResponse
+	GetUserBalance(request *models.GetUserBalanceRequest, correlationId string) models.GetUserBalanceResponse
+	DeductUserBalance(request *models.DeductBalanceRequest, correlationId string) models.DeductBalanceResponse
 }
 
 func NewWalletService(consumer rabbitmq.ConsumerInterface, publisher rabbitmq.PublisherInterface) WalletServiceInterface {
@@ -25,7 +25,7 @@ func NewWalletService(consumer rabbitmq.ConsumerInterface, publisher rabbitmq.Pu
 	}
 }
 
-func (s *WalletService) GetUserBalance(request *models.GetUserBalanceRequest, correlationId string) *models.GetUserBalanceResponse {
+func (s *WalletService) GetUserBalance(request *models.GetUserBalanceRequest, correlationId string) models.GetUserBalanceResponse {
 	// push to request user
 	getUserRequestBody, _ := json.Marshal(&request)
 	s.publisher.Push("wallet.balance.get.request", getUserRequestBody, correlationId)
@@ -35,7 +35,7 @@ func (s *WalletService) GetUserBalance(request *models.GetUserBalanceRequest, co
 
 	if err != nil {
 		// throw internal server error
-		return &models.GetUserBalanceResponse{
+		return models.GetUserBalanceResponse{
 			Status:    constants.Error,
 			ErrorCode: constants.InternalServerError,
 		}
@@ -44,10 +44,10 @@ func (s *WalletService) GetUserBalance(request *models.GetUserBalanceRequest, co
 	var walletRes models.GetUserBalanceResponse
 	json.Unmarshal(res.Body, &walletRes)
 
-	return &walletRes
+	return walletRes
 }
 
-func (s *WalletService) DeductUserBalance(request *models.DeductBalanceRequest, correlationId string) *models.DeductBalanceResponse {
+func (s *WalletService) DeductUserBalance(request *models.DeductBalanceRequest, correlationId string) models.DeductBalanceResponse {
 	// push to request deduct balance
 	deductBalanceRequestBody, _ := json.Marshal(&request)
 	s.publisher.Push("wallet.balance.deduct.request", deductBalanceRequestBody, correlationId)
@@ -57,7 +57,7 @@ func (s *WalletService) DeductUserBalance(request *models.DeductBalanceRequest, 
 
 	if err != nil {
 		// throw internal server error
-		return &models.DeductBalanceResponse{
+		return models.DeductBalanceResponse{
 			Status:    constants.Error,
 			ErrorCode: constants.InternalServerError,
 		}
@@ -66,5 +66,5 @@ func (s *WalletService) DeductUserBalance(request *models.DeductBalanceRequest, 
 	var balanceRes models.DeductBalanceResponse
 	json.Unmarshal(res.Body, &balanceRes)
 
-	return &balanceRes
+	return balanceRes
 }
