@@ -15,6 +15,7 @@ type WalletService struct {
 
 type WalletServiceInterface interface {
 	GetUserBalance(request *models.GetUserBalanceRequest, correlationId string) *models.GetUserBalanceResponse
+	DeductUserBalance(request *models.DeductBalanceRequest, correlationId string) *models.DeductBalanceResponse
 }
 
 func NewWalletService(consumer rabbitmq.ConsumerInterface, publisher rabbitmq.PublisherInterface) WalletServiceInterface {
@@ -44,4 +45,26 @@ func (s *WalletService) GetUserBalance(request *models.GetUserBalanceRequest, co
 	json.Unmarshal(res.Body, &walletRes)
 
 	return &walletRes
+}
+
+func (s *WalletService) DeductUserBalance(request *models.DeductBalanceRequest, correlationId string) *models.DeductBalanceResponse {
+	// push to request deduct balance
+	deductBalanceRequestBody, _ := json.Marshal(&request)
+	s.publisher.Push("wallet.balance.deduct.request", deductBalanceRequestBody, correlationId)
+
+	// waiting for reply
+	res, err := s.consumer.WaitReply(correlationId)
+
+	if err != nil {
+		// throw internal server error
+		return &models.DeductBalanceResponse{
+			Status:    constants.Error,
+			ErrorCode: constants.InternalServerError,
+		}
+	}
+
+	var balanceRes models.DeductBalanceResponse
+	json.Unmarshal(res.Body, &balanceRes)
+
+	return &balanceRes
 }

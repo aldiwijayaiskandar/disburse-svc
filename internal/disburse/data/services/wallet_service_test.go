@@ -73,4 +73,53 @@ func TestWalletService_GetUserBalance(t *testing.T) {
 			mockConsumer.Reset()
 		})
 	})
+
+	t.Run("deduct balance", func(t *testing.T) {
+		balance := 5000.00
+		request := &models.DeductBalanceRequest{
+			UserId: uuid.New().String(),
+			Amount: 500.00,
+		}
+		response := &models.DeductBalanceResponse{
+			Status:  constants.Success,
+			Balance: &balance,
+		}
+		resByte, _ := json.Marshal(response)
+
+		t.Run("success", func(t *testing.T) {
+			mockPublisher.ExpectedPushAnyBody("wallet.balance.deduct.request", correlationId)
+			mockConsumer.On("WaitReply", correlationId).Return(&amqp.Delivery{
+				Body: resByte,
+			}, nil)
+
+			// call get user
+			res := walletService.DeductUserBalance(request, correlationId)
+
+			// assertion
+			assert.NotNil(t, res)
+			assert.Equal(t, res.Status, constants.Success)
+			assert.Equal(t, res.ErrorCode, constants.NoError)
+			assert.Equal(t, res.Balance, response.Balance)
+
+			mockPublisher.Reset()
+			mockConsumer.Reset()
+		})
+
+		t.Run("consumer error", func(t *testing.T) {
+			mockPublisher.ExpectedPushAnyBody("wallet.balance.deduct.request", correlationId)
+			mockConsumer.On("WaitReply", correlationId).Return(nil, errors.New("consumer_err"))
+
+			// call get user
+			res := walletService.DeductUserBalance(request, correlationId)
+
+			// assertion
+			assert.NotNil(t, res)
+			assert.Equal(t, res.Status, constants.Error)
+			assert.Equal(t, res.ErrorCode, constants.InternalServerError)
+			assert.Nil(t, res.Balance)
+
+			mockPublisher.Reset()
+			mockConsumer.Reset()
+		})
+	})
 }
