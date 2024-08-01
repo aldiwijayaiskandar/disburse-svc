@@ -12,8 +12,15 @@ This application consist of serveral components:
 2. User service, provides with user data
 3. Disburse service, provides business logic of the disburse process.
 4. Wallet service, provides with user's wallet / balance data
+<p align="center">
+    <img src="https://ibb.co.com/cXk4y30" height="150" alt="Main">
+</p>
 
 ## Process Of The Disburse
+
+<p align="center">
+    <img src="https://ibb.co.com/fMQQ5bB" height="150" alt="Main">
+</p>
 
 ## How to start
 

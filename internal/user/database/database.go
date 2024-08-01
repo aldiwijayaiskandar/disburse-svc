@@ -19,6 +19,11 @@ func NewDatabaseConn(url string) *gorm.DB {
 	db.DisableForeignKeyConstraintWhenMigrating = true
 	db.AutoMigrate(&schema.User{})
 
+	db.Save(&schema.User{
+		Id:   "12345",
+		Name: "test-user",
+	})
+
 	return db
 
 }
