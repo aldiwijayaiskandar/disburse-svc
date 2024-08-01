@@ -63,11 +63,21 @@ func RegisterRoutes(r *gin.Engine, conn *amqp.Connection) {
 			return
 		}
 
+		// log.Println(res.ErrorCode)
+
+		errorMessage := res.Message
+
+		if errorMessage == nil {
+			statusCodeMessage := res.ErrorCode.Error()
+			errorMessage = &statusCodeMessage
+		}
+
 		ctx.JSON(res.ErrorCode.StatusCode(), models.ApiResponse{
 			Status: res.ErrorCode.StatusCode(),
 			Data: map[string]interface{}{
 				"balance": res.Balance,
 			},
+			Message: errorMessage,
 		})
 	})
 }
