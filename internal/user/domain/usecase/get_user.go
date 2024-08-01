@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"log"
 
 	"github.com/paper-assessment/internal/user/domain/models"
 	constants "github.com/paper-assessment/pkg/contants"
@@ -10,8 +9,6 @@ import (
 
 func (u *UserUsecase) GetUser(request models.GetUserRequest) *models.GetUserResponse {
 	ctx := context.TODO()
-
-	log.Println("Id", request.Id)
 
 	res, err := u.userRepo.Get(ctx, request.Id)
 
@@ -32,7 +29,8 @@ func (u *UserUsecase) GetUser(request models.GetUserRequest) *models.GetUserResp
 	}
 
 	return &models.GetUserResponse{
-		Status: constants.Success,
-		User:   res,
+		Status:    constants.Success,
+		ErrorCode: constants.NoError,
+		User:      res,
 	}
 }

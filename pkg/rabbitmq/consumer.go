@@ -22,6 +22,7 @@ func (c Consumer) setup() error {
 	if err != nil {
 		return err
 	}
+
 	return declareExchange(channel)
 }
 
@@ -55,6 +56,7 @@ func (c Consumer) Listen(topics []string, listener func(delivery *amqp.Delivery)
 		false,       // no-wait
 		nil,         // arguments
 	)
+
 	if err != nil {
 		return err
 	}
@@ -102,10 +104,19 @@ func (c Consumer) WaitReply(correlationId string) (*amqp.Delivery, error) {
 		"reply_queue", // name
 		false,         // durable
 		false,         // delete when unused
-		true,          // exclusive
+		false,         // exclusive
 		false,         // no-wait
 		nil,           // arguments
 	)
+
+	ch.QueueBind(
+		"reply_queue",
+		"message.reply",
+		getExchangeName(),
+		false,
+		nil,
+	)
+
 	if err != nil {
 		return nil, err
 	}
@@ -119,8 +130,8 @@ func (c Consumer) WaitReply(correlationId string) (*amqp.Delivery, error) {
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
 			if d.CorrelationId == correlationId {
+				log.Printf("Received reply message: %s", d.Body)
 				replyChan <- &d
 				return
 			}

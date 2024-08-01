@@ -43,11 +43,11 @@ func (p *Publisher) Push(key string, body []byte, correlationId string) error {
 			ContentType:   "text/plain",
 			Body:          body,
 			CorrelationId: correlationId,
-			ReplyTo:       "reply_queue",
+			ReplyTo:       "message.reply",
 		},
 	)
 
-	log.Printf("Sending message: %s -> %s", body, getExchangeName())
+	log.Printf("Sending message:  %s -> %s", body, getExchangeName())
 	return nil
 }
 

@@ -2,7 +2,6 @@
 # Main
 
 main:
-	go run ./cmd/api_gateway/main.go
 	go run ./cmd/disburse/main.go
 	go run ./cmd/user/main.go
 	go run ./cmd/wallet/main.go
