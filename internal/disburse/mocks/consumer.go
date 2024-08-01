@@ -19,8 +19,8 @@ func (m *MockConsumer) Listen(topics []string, listener func(delivery *amqp.Deli
 	return args.Error(1)
 }
 
-func (m *MockConsumer) WaitReply(key string, correlationId string) (*amqp.Delivery, error) {
-	args := m.Called(key, correlationId)
+func (m *MockConsumer) WaitReply(key string, consumer string, correlationId string) (*amqp.Delivery, error) {
+	args := m.Called(key, consumer, correlationId)
 
 	if args.Get(0) != nil {
 		return args.Get(0).(*amqp.Delivery), args.Error(1)

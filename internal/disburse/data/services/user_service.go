@@ -33,7 +33,7 @@ func (s *UserService) GetUser(request *models.GetUserRequest, correlationId stri
 	s.publisher.Push("user.get.request", "user.get.request.reply", getUserRequestBody, correlationId)
 
 	// waiting for reply
-	res, err := s.consumer.WaitReply(getUserReplyKey, correlationId)
+	res, err := s.consumer.WaitReply(getUserReplyKey, "disburse-consumer", correlationId)
 
 	if err != nil {
 		// throw internal server error

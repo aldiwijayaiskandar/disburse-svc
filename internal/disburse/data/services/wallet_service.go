@@ -32,7 +32,7 @@ func (s *WalletService) GetUserBalance(request *models.GetUserBalanceRequest, co
 	s.publisher.Push("wallet.balance.get.request", getUserBalanceReplyKey, getUserRequestBody, correlationId)
 
 	// waiting for reply
-	res, err := s.consumer.WaitReply(getUserBalanceReplyKey, correlationId)
+	res, err := s.consumer.WaitReply(getUserBalanceReplyKey, "disburse-consumer", correlationId)
 
 	if err != nil {
 		// throw internal server error
@@ -55,7 +55,7 @@ func (s *WalletService) DeductUserBalance(request *models.DeductBalanceRequest, 
 	s.publisher.Push("wallet.balance.deduct.request", deductBalanceReplyKey, deductBalanceRequestBody, correlationId)
 
 	// waiting for reply
-	res, err := s.consumer.WaitReply(deductBalanceReplyKey, correlationId)
+	res, err := s.consumer.WaitReply(deductBalanceReplyKey, "disburse-consumer", correlationId)
 
 	if err != nil {
 		// throw internal server error

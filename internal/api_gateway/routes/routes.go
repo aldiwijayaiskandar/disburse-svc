@@ -42,10 +42,11 @@ func RegisterRoutes(r *gin.Engine, conn *amqp.Connection) {
 			log.Fatalln("fail to create consumer")
 		}
 
+		disburseReplyKey := "disburse.request.reply"
 		byteBody, _ := json.Marshal(body)
-		publisher.Push("disburse.request", byteBody, correlationId)
+		publisher.Push("disburse.request", disburseReplyKey, byteBody, correlationId)
 
-		d, err := consumer.WaitReply(correlationId)
+		d, err := consumer.WaitReply(disburseReplyKey, "api-gateway-consumer", correlationId)
 
 		log.Println(d.Body)
 
